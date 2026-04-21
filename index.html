@@ -2,98 +2,232 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Import Error Report</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duplicate Users Report</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 32px; }
-  h1 { font-size: 22px; font-weight: 800; color: #f1f5f9; margin-bottom: 4px; }
-  .sub { color: #64748b; font-size: 13px; margin-bottom: 28px; }
-  .stats { display: flex; gap: 16px; margin-bottom: 28px; }
-  .stat { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 16px 24px; }
-  .stat .num { font-size: 28px; font-weight: 900; }
-  .stat .lbl { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
-  .green { color: #4ade80; } .red { color: #f87171; } .yellow { color: #fbbf24; }
-  table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
-  th { background: #0f172a; padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid #334155; }
-  td { padding: 11px 16px; font-size: 13px; border-bottom: 1px solid #1e293b; }
-  tr:last-child td { border-bottom: none; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 16px; }
+  h1 { font-size: 18px; font-weight: 800; color: #f1f5f9; margin-bottom: 4px; }
+  .sub { color: #64748b; font-size: 12px; margin-bottom: 20px; }
+  .stats { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+  .stat { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px 16px; flex: 1; min-width: 120px; }
+  .stat .num { font-size: 24px; font-weight: 900; }
+  .stat .lbl { font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+  .orange { color: #fb923c; } .blue { color: #60a5fa; } .yellow { color: #fbbf24; }
+  h2 { font-size: 13px; font-weight: 800; margin-bottom: 12px; padding: 10px 14px; border-radius: 10px; line-height: 1.4; }
+  .cat1-title { background: rgba(251,146,60,0.1); color: #fb923c; border: 1px solid rgba(251,146,60,0.2); }
+  .cat2-title { background: rgba(96,165,250,0.1); color: #60a5fa; border: 1px solid rgba(96,165,250,0.2); }
+  .group { background: #1e293b; border: 1px solid #334155; border-radius: 14px; margin-bottom: 14px; overflow: hidden; }
+  .group-header { padding: 10px 14px; border-bottom: 1px solid #334155; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .email-badge { font-family: monospace; font-size: 11px; color: #60a5fa; font-weight: 700; word-break: break-all; flex: 1; }
+  .count-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+  .cat1-badge { background: rgba(251,146,60,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.3); }
+  .cat2-badge { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; min-width: 340px; }
+  th { background: #0f172a; padding: 8px 12px; text-align: left; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+  td { padding: 9px 12px; font-size: 12px; border-top: 1px solid #0f172a; word-break: break-word; }
   tr:hover td { background: #263348; }
-  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-  .dup { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
   .username { font-family: monospace; color: #a78bfa; font-weight: 700; }
-  .email { color: #60a5fa; }
-  .note { margin-top: 20px; background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); border-radius: 10px; padding: 14px 18px; font-size: 13px; color: #fbbf24; }
+  .inserted { color: #4ade80; font-weight: 700; }
+  .skipped  { color: #f87171; font-weight: 700; }
+  .note-box { margin-top: 8px; padding: 10px 14px; border-radius: 8px; font-size: 12px; line-height: 1.5; }
+  .note-orange { background: rgba(251,146,60,0.08); border: 1px solid rgba(251,146,60,0.2); color: #fdba74; }
+  .note-blue   { background: rgba(96,165,250,0.08); border: 1px solid rgba(96,165,250,0.2); color: #93c5fd; }
+  .section { margin-bottom: 28px; }
+  .divider { height: 1px; background: #1e293b; margin: 24px 0; }
+  @media (max-width: 480px) {
+    .stat { min-width: calc(50% - 5px); }
+    .stat .num { font-size: 20px; }
+    h2 { font-size: 12px; }
+    td, th { padding: 7px 10px; font-size: 11px; }
+  }
 </style>
 </head>
 <body>
 
-<h1>📊 Import Error Report</h1>
-<p class="sub">Generated from: exportlist (2).csv &nbsp;|&nbsp; Total rows: 665</p>
+<h1>📋 Duplicate Users Report</h1>
+<p class="sub">Analysis of 41 users with duplicate emails — BGS CFX Import</p>
 
 <div class="stats">
-  <div class="stat"><div class="num green">622</div><div class="lbl">✅ Inserted</div></div>
-  <div class="stat"><div class="num red">41</div><div class="lbl">❌ Errors (Duplicate Email)</div></div>
-  <div class="stat"><div class="num yellow">2</div><div class="lbl">⏭ Skipped (Blank rows)</div></div>
+  <div class="stat"><div class="num orange">5</div><div class="lbl">⚠️ Same Person, 2 Accounts</div></div>
+  <div class="stat"><div class="num blue">29</div><div class="lbl">👨‍👩‍👧 Different People, Shared Email</div></div>
+  <div class="stat"><div class="num yellow">41</div><div class="lbl">Total Affected Users</div></div>
 </div>
 
-<table>
-  <thead>
-    <tr>
-      <th>S.No</th>
-      <th>CSV Row</th>
-      <th>Username (Not Inserted)</th>
-      <th>Duplicate Email</th>
-      <th>Already Used By</th>
-      <th>Reason</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td>1</td><td>173</td><td class="username">BR821714</td><td class="email">amarjeet.php@maxtratechnologies.net</td><td class="username">BR171687 (testdata1)</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>2</td><td>174</td><td class="username">BR604812</td><td class="email">arpit.ba@maxtratechnologies.net</td><td class="username">BR172 (Test Maxtra)</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>3</td><td>198</td><td class="username">BR680577</td><td class="email">patchillabalu@gmail.com</td><td class="username">BOT433970</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>4</td><td>204</td><td class="username">BR332826</td><td class="email">santhoshkumar99128@gmail.com</td><td class="username">BOT529437</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>5</td><td>205</td><td class="username">BR824867</td><td class="email">patchillabalu@gmail.com</td><td class="username">BOT433970</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>6</td><td>225</td><td class="username">BR882621</td><td class="email">narsimlukurma50@gmail.com</td><td class="username">BOT482994</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>7</td><td>230</td><td class="username">BR578417</td><td class="email">parvathammakasaramoni@gmail.com</td><td class="username">BOT844874</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>8</td><td>232</td><td class="username">BR375091</td><td class="email">madhuri98.t@gmail.com</td><td class="username">BR994979</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>9</td><td>239</td><td class="username">BR730604</td><td class="email">sandeepgunnam311@gmail.com</td><td class="username">BR142659</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>10</td><td>251</td><td class="username">BR832844</td><td class="email">mnsgoud36709@gmail.com</td><td class="username">BOT207964</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>11</td><td>258</td><td class="username">BR997262</td><td class="email">banothramu36@gmail.com</td><td class="username">BOT218240</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>12</td><td>262</td><td class="username">BR593873</td><td class="email">3699lingam@gmail.com</td><td class="username">BR857860</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>13</td><td>264</td><td class="username">BR772030</td><td class="email">gaddavenkatesh1448@gmail.com</td><td class="username">BOT654115</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>14</td><td>267</td><td class="username">BR594532</td><td class="email">kpanigoud159@gmail.com</td><td class="username">BR123959</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>15</td><td>268</td><td class="username">BR871220</td><td class="email">kpanigoud159@gmail.com</td><td class="username">BR123959</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>16</td><td>272</td><td class="username">BR347851</td><td class="email">avulasanathkumar@gmail.com</td><td class="username">BR501397</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>17</td><td>336</td><td class="username">BR127415</td><td class="email">satyam.rfc@gmail.com</td><td class="username">BOT535913</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>18</td><td>338</td><td class="username">BR849480</td><td class="email">shankershanker0399@gmail.com</td><td class="username">BOT470324</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>19</td><td>345</td><td class="username">BR635538</td><td class="email">gadhamanoj645@gmail.com</td><td class="username">BR473760</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>20</td><td>350</td><td class="username">BR607975</td><td class="email">sndnareshms@gmail.com</td><td class="username">BOT705368</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>21</td><td>381</td><td class="username">BR783300</td><td class="email">vysramnayak123@gmail.com</td><td class="username">BR963694</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>22</td><td>388</td><td class="username">BR705667</td><td class="email">bhupathipapagalla@gmail.com</td><td class="username">BR527108</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>23</td><td>396</td><td class="username">BR252760</td><td class="email">venkatesh.g9932@gmail.com</td><td class="username">BOT782219</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>24</td><td>398</td><td class="username">BR293436</td><td class="email">ramuguguloth120@gmail.com</td><td class="username">BOT702542</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>25</td><td>400</td><td class="username">BR232708</td><td class="email">ksudhakarr18@gmail.com</td><td class="username">BOT109868</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>26</td><td>432</td><td class="username">BR917192</td><td class="email">edikudapraveen10909@gmail.com</td><td class="username">BR162513</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>27</td><td>448</td><td class="username">BR998406</td><td class="email">srivanichindam14@gmail.com</td><td class="username">BR101577</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>28</td><td>469</td><td class="username">BR957300</td><td class="email">dnagaraju068@gmail.com</td><td class="username">BR103695</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>29</td><td>470</td><td class="username">BR571597</td><td class="email">yadagirilawman@gmail.com</td><td class="username">BR661204</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>30</td><td>475</td><td class="username">BR478078</td><td class="email">patchillabalu@gmail.com</td><td class="username">BOT433970</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>31</td><td>482</td><td class="username">BR626127</td><td class="email">santhoshkumar99128@gmail.com</td><td class="username">BOT529437</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>32</td><td>491</td><td class="username">BR889272</td><td class="email">bikshamdpsi@gmail.com</td><td class="username">BOT640375</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>33</td><td>497</td><td class="username">BR457203</td><td class="email">yadagirilawman@gmail.com</td><td class="username">BR661204</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>34</td><td>520</td><td class="username">BR121118</td><td class="email">srivanichindam14@gmail.com</td><td class="username">BR101577</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>35</td><td>537</td><td class="username">BR540806</td><td class="email">santhoshkumar99128@gmail.com</td><td class="username">BOT529437</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>36</td><td>563</td><td class="username">BR454493</td><td class="email">jkswamy906@gmail.com</td><td class="username">BR406648</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>37</td><td>612</td><td class="username">BR931622</td><td class="email">vamshikiran567@gmail.com</td><td class="username">BR451004</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>38</td><td>618</td><td class="username">BR990421</td><td class="email">raghuyadav45@gmail.com</td><td class="username">BR812924</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>39</td><td>629</td><td class="username">BR925104</td><td class="email">satulaxmi1989@gmail.com</td><td class="username">BR367569</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>40</td><td>659</td><td class="username">BR949447</td><td class="email">chirukavali007@gmail.com</td><td class="username">BR789269</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-    <tr><td>41</td><td>662</td><td class="username">BR554973</td><td class="email">keshamonimadhavi1@gmail.com</td><td class="username">BR690032</td><td><span class="badge dup">Duplicate Email</span></td></tr>
-  </tbody>
-</table>
+<!-- CATEGORY 1 -->
+<div class="section">
+  <h2 class="cat1-title">⚠️ Category 1 — Same Person, 2 Accounts (Accidental Double Registration)</h2>
+  <p style="color:#94a3b8;font-size:12px;margin-bottom:14px;">These users registered twice with the same email. Both accounts are in DB. Admin should decide which one to keep.</p>
 
-<div class="note">
-  ⚠️ <strong>Note:</strong> Ye 41 users DB mein insert nahi hue kyunki inki email already kisi doosre user ke paas registered hai. In users ko manually alag email se add karna hoga ya CSV mein email update karni hogi.
+  <!-- Sandeep Gunnam -->
+  <div class="group">
+    <div class="group-header">
+      <span class="email-badge">sandeepgunnam311@gmail.com</span>
+      <span class="count-badge cat1-badge">2 Accounts — Same Person</span>
+    </div>
+    <table>
+      <tr><th>Username</th><th>Name</th><th>Status</th><th>Recommendation</th></tr>
+      <tr><td class="username">BR142659</td><td>Sandeep Gunnam</td><td class="inserted">✅ Inserted (First)</td><td>Keep this one</td></tr>
+      <tr><td class="username">BR730604</td><td>Sandeep Gunnam</td><td class="inserted">✅ Inserted (Duplicate)</td><td>Review / Merge</td></tr>
+    </table>
+  </div>
+
+  <!-- Madhuri Thummala -->
+  <div class="group">
+    <div class="group-header">
+      <span class="email-badge">madhuri98.t@gmail.com</span>
+      <span class="count-badge cat1-badge">2 Accounts — Same Person</span>
+    </div>
+    <table>
+      <tr><th>Username</th><th>Name</th><th>Status</th><th>Recommendation</th></tr>
+      <tr><td class="username">BR994979</td><td>Madhuri Thummala</td><td class="inserted">✅ Inserted (First)</td><td>Keep this one</td></tr>
+      <tr><td class="username">BR375091</td><td>Madhuri Thummala</td><td class="inserted">✅ Inserted (Duplicate)</td><td>Review / Merge</td></tr>
+    </table>
+  </div>
+
+  <!-- Praveen Kumar Edikuda -->
+  <div class="group">
+    <div class="group-header">
+      <span class="email-badge">edikudapraveen10909@gmail.com</span>
+      <span class="count-badge cat1-badge">2 Accounts — Same Person</span>
+    </div>
+    <table>
+      <tr><th>Username</th><th>Name</th><th>Status</th><th>Recommendation</th></tr>
+      <tr><td class="username">BR162513</td><td>Praveen Kumar Edikuda</td><td class="inserted">✅ Inserted (First)</td><td>Keep this one</td></tr>
+      <tr><td class="username">BR917192</td><td>PRAVEEN KUMAR EDIKUDA</td><td class="inserted">✅ Inserted (Duplicate)</td><td>Review / Merge</td></tr>
+    </table>
+  </div>
+
+  <!-- Gugulothu Ramu -->
+  <div class="group">
+    <div class="group-header">
+      <span class="email-badge">ramuguguloth120@gmail.com</span>
+      <span class="count-badge cat1-badge">2 Accounts — Same Person</span>
+    </div>
+    <table>
+      <tr><th>Username</th><th>Name</th><th>Status</th><th>Recommendation</th></tr>
+      <tr><td class="username">BOT702542</td><td>GUGULOTHU RAMU</td><td class="inserted">✅ Inserted (First)</td><td>Keep this one</td></tr>
+      <tr><td class="username">BR293436</td><td>Guguloth Ramu</td><td class="inserted">✅ Inserted (Duplicate)</td><td>Review / Merge</td></tr>
+    </table>
+  </div>
+
+  <!-- Vamshikiran -->
+  <div class="group">
+    <div class="group-header">
+      <span class="email-badge">vamshikiran567@gmail.com</span>
+      <span class="count-badge cat1-badge">2 Accounts — Same Person</span>
+    </div>
+    <table>
+      <tr><th>Username</th><th>Name</th><th>Status</th><th>Recommendation</th></tr>
+      <tr><td class="username">BR451004</td><td>Bokanti Ramdas</td><td class="inserted">✅ Inserted (First)</td><td>Keep this one</td></tr>
+      <tr><td class="username">BR931622</td><td>Ramdas Bonkanti</td><td class="inserted">✅ Inserted (Duplicate)</td><td>Review / Merge</td></tr>
+    </table>
+  </div>
+
+  <div class="note-box note-orange">⚠️ Action Required: For Category 1 users, admin should verify which account is the real one and either delete the duplicate or merge the investment data.</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- CATEGORY 2 -->
+<div class="section">
+  <h2 class="cat2-title">👨‍👩‍👧 Category 2 — Different People Sharing Same Email (Family / Common Email)</h2>
+  <p style="color:#94a3b8;font-size:12px;margin-bottom:14px;">These are different individuals who used the same email address. All accounts are valid and have been inserted successfully.</p>
+
+  <!-- patchillabalu -->
+  <div class="group">
+    <div class="group-header">
+      <span class="email-badge">patchillabalu@gmail.com</span>
+      <span class="count-badge cat2-badge">4 Different People</span>
+    </div>
+    <table>
+      <tr><th>Username</th><th>Name</th><th>Status</th></tr>
+      <tr><td class="username">BOT433970</td><td>Patchilla Gurudas Prasad</td><td class="inserted">✅ Inserted</td></tr>
+      <tr><td class="username">BR680577</td><td>Shantikumar Sura</td><td class="inserted">✅ Inserted</td></tr>
+      <tr><td class="username">BR824867</td><td>Anjali Sura</td><td class="inserted">✅ Inserted</td></tr>
+      <tr><td class="username">BR478078</td><td>Prathiba Chikka</td><td class="inserted">✅ Inserted</td></tr>
+    </table>
+  </div>
+
+  <!-- santhoshkumar99128 -->
+  <div class="group">
+    <div class="group-header">
+      <span class="email-badge">santhoshkumar99128@gmail.com</span>
+      <span class="count-badge cat2-badge">4 Different People</span>
+    </div>
+    <table>
+      <tr><th>Username</th><th>Name</th><th>Status</th></tr>
+      <tr><td class="username">BOT529437</td><td>Sabhavat Santhosh Kumar</td><td class="inserted">✅ Inserted</td></tr>
+      <tr><td class="username">BR332826</td><td>Saritha Kethavath</td><td class="inserted">✅ Inserted</td></tr>
+      <tr><td class="username">BR626127</td><td>Ramesh Sabhavat</td><td class="inserted">✅ Inserted</td></tr>
+      <tr><td class="username">BR540806</td><td>Sabhavat Harichand</td><td class="inserted">✅ Inserted</td></tr>
+    </table>
+  </div>
+
+  <!-- kpanigoud159 -->
+  <div class="group">
+    <div class="group-header">
+      <span class="email-badge">kpanigoud159@gmail.com</span>
+      <span class="count-badge cat2-badge">3 Different People</span>
+    </div>
+    <table>
+      <tr><th>Username</th><th>Name</th><th>Status</th></tr>
+      <tr><td class="username">BR123959</td><td>Kommagoni Kodanda Phani Goud</td><td class="inserted">✅ Inserted</td></tr>
+      <tr><td class="username">BR594532</td><td>Panuganti Ashwini</td><td class="inserted">✅ Inserted</td></tr>
+      <tr><td class="username">BR871220</td><td>Kommagoni Ramachandramma</td><td class="inserted">✅ Inserted</td></tr>
+    </table>
+  </div>
+
+  <!-- yadagirilawman -->
+  <div class="group">
+    <div class="group-header">
+      <span class="email-badge">yadagirilawman@gmail.com</span>
+      <span class="count-badge cat2-badge">3 Different People</span>
+    </div>
+    <table>
+      <tr><th>Username</th><th>Name</th><th>Status</th></tr>
+      <tr><td class="username">BR661204</td><td>Yadaiah Chinthala</td><td class="inserted">✅ Inserted</td></tr>
+      <tr><td class="username">BR571597</td><td>RAJU CHATHARABOINA</td><td class="inserted">✅ Inserted</td></tr>
+      <tr><td class="username">BR457203</td><td>Venkateshwarlu Challa</td><td class="inserted">✅ Inserted</td></tr>
+    </table>
+  </div>
+
+  <!-- Remaining Cat 2 -->
+  <div class="group">
+    <div class="group-header">
+      <span class="email-badge">Other Shared Emails (15 more users)</span>
+      <span class="count-badge cat2-badge">2 People Each</span>
+    </div>
+    <table>
+      <tr><th>Email</th><th>Username 1</th><th>Username 2</th><th>Status</th></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">ksudhakarr18@gmail.com</td><td class="username">BOT109868</td><td class="username">BR232708</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">sndnareshms@gmail.com</td><td class="username">BOT705368</td><td class="username">BR607975</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">mnsgoud36709@gmail.com</td><td class="username">BOT207964</td><td class="username">BR832844</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">banothramu36@gmail.com</td><td class="username">BOT218240</td><td class="username">BR997262</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">narsimlukurma50@gmail.com</td><td class="username">BOT482994</td><td class="username">BR882621</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">shankershanker0399@gmail.com</td><td class="username">BOT470324</td><td class="username">BR849480</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">parvathammakasaramoni@gmail.com</td><td class="username">BOT844874</td><td class="username">BR578417</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">gaddavenkatesh1448@gmail.com</td><td class="username">BOT654115</td><td class="username">BR772030</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">satyam.rfc@gmail.com</td><td class="username">BOT535913</td><td class="username">BR127415</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">bikshamdpsi@gmail.com</td><td class="username">BOT640375</td><td class="username">BR889272</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">venkatesh.g9932@gmail.com</td><td class="username">BOT782219</td><td class="username">BR252760</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">avulasanathkumar@gmail.com</td><td class="username">BR501397</td><td class="username">BR347851</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">3699lingam@gmail.com</td><td class="username">BR857860</td><td class="username">BR593873</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">raghuyadav45@gmail.com</td><td class="username">BR812924</td><td class="username">BR990421</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">vysramnayak123@gmail.com</td><td class="username">BR963694</td><td class="username">BR783300</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">jkswamy906@gmail.com</td><td class="username">BR406648</td><td class="username">BR454493</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">chirukavali007@gmail.com</td><td class="username">BR789269</td><td class="username">BR949447</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">dnagaraju068@gmail.com</td><td class="username">BR103695</td><td class="username">BR957300</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">gadhamanoj645@gmail.com</td><td class="username">BR473760</td><td class="username">BR635538</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">bhupathipapagalla@gmail.com</td><td class="username">BR527108</td><td class="username">BR705667</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">keshamonimadhavi1@gmail.com</td><td class="username">BR690032</td><td class="username">BR554973</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">satulaxmi1989@gmail.com</td><td class="username">BR367569</td><td class="username">BR925104</td><td class="inserted">✅ Both Inserted</td></tr>
+      <tr><td style="color:#60a5fa;font-size:12px">srivanichindam14@gmail.com</td><td class="username">BR101577</td><td class="username">BR998406</td><td class="inserted">✅ Both Inserted</td></tr>
+    </table>
+  </div>
+
+  <div class="note-box note-blue">ℹ️ Category 2 users are all valid — different people sharing a family/common email. No action required. All can login using their unique Username + Password.</div>
 </div>
 
 </body>
